@@ -4,7 +4,7 @@
  *
  * This file is kept for reference only and will be removed in a future update.
  */
-import { constants, FrontendTemplate } from "@burnt-labs/quick-start-utils";
+import { constants } from "@burnt-labs/quick-start-utils";
 
 export const {
   INSTANTIATE_SALT,
@@ -14,4 +14,5 @@ export const {
   VERSIONS,
 } = constants;
 
-export type { FrontendTemplate };
+export const NFT_SALT = "hot-potato-nft";
+export const NFT_INSTANTIATE_CHECKSUM = "fa0e3423e94c6d1c4a8cfc7462e6596eff651718a51b3d233896fcb09ed70ef6";

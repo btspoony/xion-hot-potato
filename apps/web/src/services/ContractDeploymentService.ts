@@ -1,6 +1,5 @@
 import { type QueryClient } from "@tanstack/react-query";
 import { EXISTING_CONTRACTS_QUERY_KEY } from "../hooks/useExistingContracts";
-import { CONTRACT_TYPES } from "../config/contractTypes";
 
 export interface ContractAddresses {
   cw721Address?: string;
@@ -42,7 +41,7 @@ export class ContractDeploymentService {
   /**
    * Process UserMap deployment result
    */
-  processUserMapDeployment(data: {
+  processNFTDeployment(data: {
     nftAddress: string;
     tx: { transactionHash: string };
   }): DeploymentResult {
@@ -52,13 +51,6 @@ export class ContractDeploymentService {
       },
       transactionHash: data.tx.transactionHash,
     };
-  }
-
-  /**
-   * Get deployment state key based on contract type
-   */
-  getDeploymentStateKey(contractType: string): CONTRACT_TYPES {
-    return contractType as CONTRACT_TYPES;
   }
 
   /**

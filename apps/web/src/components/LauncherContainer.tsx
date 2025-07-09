@@ -6,30 +6,24 @@ import {
 import { LauncherView } from "./LauncherView";
 import { useContractDeployment } from "../hooks/useContractDeployment";
 import { DEFAULT_FRONTEND_TEMPLATE, type FrontendTemplate } from "../config/constants";
-import { CONTRACT_TYPES, DEFAULT_CONTRACT_TYPE, type ContractType } from "../config/contractTypes";
 import launcherContent from "../content/launcher.json";
 
 export default function LauncherContainer() {
-  const [contractType, setContractType] = useState<ContractType>(DEFAULT_CONTRACT_TYPE);
   const [frontendTemplate, setFrontendTemplate] = useState<FrontendTemplate>(DEFAULT_FRONTEND_TEMPLATE);
   
   const { data: account } = useAbstraxionAccount();
   const { client } = useAbstraxionSigningClient();
   
-  const deployment = useContractDeployment(contractType, frontendTemplate, account);
+  const deployment = useContractDeployment(frontendTemplate, account);
 
   const handleLaunch = async () => {
     if (!client || !account) return;
 
     try {
-      if (contractType === CONTRACT_TYPES.CW721) {
-        await deployment.deployCW721({
-          senderAddress: account.bech32Address,
-          client,
-        });
-      } else {
-        throw new Error("Invalid contract type");
-      }
+      await deployment.deployCW721({
+        senderAddress: account.bech32Address,
+        client,
+      });
     } catch {
       // Error is handled by the deployment hook
     }
@@ -42,7 +36,6 @@ export default function LauncherContainer() {
       pageDescription={launcherContent.page_description}
       
       // State
-      contractType={contractType}
       frontendTemplate={frontendTemplate}
       transactionHash={deployment.transactionHash}
       errorMessage={deployment.errorMessage}
@@ -56,7 +49,6 @@ export default function LauncherContainer() {
       account={account}
       
       // Actions
-      onContractTypeChange={setContractType}
       onFrontendTemplateChange={setFrontendTemplate}
       onLaunch={handleLaunch}
       onErrorClose={deployment.clearError}

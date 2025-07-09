@@ -25,6 +25,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {client ? (
         <>
           <header className="flex justify-between items-center w-full border-b border-white/20 py-5 px-8 sm:px-24 mb-4">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold">Hey!</span>
+            </div>
             <nav>
               <BaseButton
                 className="hover:cursor-pointer"

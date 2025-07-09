@@ -3,7 +3,6 @@ import { ArticleTitle, MutedText } from "./ui/Typography";
 import { SuccessMessage } from "./SuccessMessage";
 import { ErrorMessage } from "./ErrorMessage";
 import launcherContent from "../content/launcher.json";
-import { CONTRACT_TYPES, type ContractType } from "../config/contractTypes";
 
 interface LaunchSectionProps {
   onLaunch: () => void;
@@ -12,7 +11,6 @@ interface LaunchSectionProps {
   transactionHash: string;
   errorMessage: string;
   onErrorClose: () => void;
-  contractType: ContractType;
   isDeployed: boolean;
 }
 
@@ -23,15 +21,10 @@ export function LaunchSection({
   transactionHash,
   errorMessage,
   onErrorClose,
-  contractType,
   isDeployed,
 }: LaunchSectionProps) {
-  const stepTitle = contractType === CONTRACT_TYPES.USER_MAP 
-    ? "Launch Contract" 
-    : "Launch Contracts";
-  const stepDescription = contractType === CONTRACT_TYPES.USER_MAP
-    ? "Deploy your User Map contract and treasury to the blockchain"
-    : "Deploy your RUM contracts with a shared treasury";
+  const stepTitle = "Launch Contract";
+  const stepDescription = "Deploy your NFT contract to the blockchain";
 
   return (
     <article className="w-full mx-auto">
@@ -49,9 +42,7 @@ export function LaunchSection({
             ? launcherContent.launch_button_text.launching
             : isDeployed
             ? launcherContent.launch_button_text.launched
-            : contractType === CONTRACT_TYPES.RUM
-            ? "Deploy RUM Contracts"
-            : "Launch User Map & Fund Treasury"}
+            : "Launch NFT Contract"}
         </BaseButton>
       </section>
       <section>

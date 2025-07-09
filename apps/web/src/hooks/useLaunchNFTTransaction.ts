@@ -2,33 +2,32 @@ import { useMutation, UseMutationOptions } from "@tanstack/react-query";
 import { GranteeSignerClient } from "@burnt-labs/abstraxion";
 import { DeliverTxResponse } from "@cosmjs/stargate";
 import {
-  assembleUserMapTransaction,
+  assembleInstantiateNFTTransaction,
   executeBatchTransaction,
-} from "../lib/transactionUserMap";
+} from "../lib/transactionLaunchNFT";
 
-interface LaunchUserMapTransactionParams {
+interface LaunchNFTTransactionParams {
   senderAddress: string;
   saltString: string;
   client: GranteeSignerClient;
 }
 
-interface LaunchUserMapTransactionResult {
+interface LaunchNFTTransactionResult {
   tx: DeliverTxResponse;
-  appAddress: string;
-  treasuryAddress: string;
+  contractAddress: string;
 }
 
-export function useLaunchUserMapTransaction(
+export function useLaunchNFTTransaction(
   options?: UseMutationOptions<
-    LaunchUserMapTransactionResult,
+    LaunchNFTTransactionResult,
     Error,
-    LaunchUserMapTransactionParams
+    LaunchNFTTransactionParams
   >
 ) {
-  return useMutation<LaunchUserMapTransactionResult, Error, LaunchUserMapTransactionParams>({
+  return useMutation<LaunchNFTTransactionResult, Error, LaunchNFTTransactionParams>({
     mutationFn: async ({ senderAddress, saltString, client }) => {
-      const { messages, appAddress, treasuryAddress } =
-        await assembleUserMapTransaction({
+      const { messages, contractAddress } =
+        await assembleInstantiateNFTTransaction({
           senderAddress,
           saltString,
         });
@@ -41,8 +40,7 @@ export function useLaunchUserMapTransaction(
 
       return {
         tx,
-        appAddress,
-        treasuryAddress,
+        contractAddress,
       };
     },
     ...options,

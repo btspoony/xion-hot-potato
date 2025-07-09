@@ -1,5 +1,4 @@
 import { SectionTitle, MutedText } from "./ui/Typography";
-import { CONTRACT_TYPES, type ContractType } from "../config/contractTypes";
 import { Badge } from "./ui/Badge";
 
 interface DeployedContract {
@@ -13,23 +12,19 @@ interface DeployedContract {
 }
 
 interface DeployedContractsSectionProps {
-  contractType: ContractType;
   deployedContracts: DeployedContract[];
 }
 
 export function DeployedContractsSection({
-  contractType,
   deployedContracts,
 }: DeployedContractsSectionProps) {
   if (deployedContracts.length === 0) {
     return null;
   }
 
-  const contractTypeName = contractType === CONTRACT_TYPES.RUM ? "RUM" : "User Map";
-
   return (
     <div className="w-full max-w-screen-md space-y-4 mb-8">
-      <SectionTitle>Deployed {contractTypeName} Contracts</SectionTitle>
+      <SectionTitle>Deployed Contracts</SectionTitle>
       <div className="space-y-2">
         {deployedContracts.map((contract) => (
           <div

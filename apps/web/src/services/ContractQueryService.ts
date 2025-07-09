@@ -5,9 +5,7 @@ import type { DeployedContract } from "../hooks/useContractDeployment";
 const REST_URL = import.meta.env.VITE_REST_URL || "https://api.xion-testnet-2.burnt.com";
 
 export interface ContractQueryOptions {
-  baseSalt: string;
   senderAddress: string;
-  contractType: "rum" | "userMap";
   treasuryAddress?: string;
 }
 
@@ -18,12 +16,10 @@ export class ContractQueryService {
   async fetchDeployedContractsWithMetadata(
     options: ContractQueryOptions
   ): Promise<DeployedContract[]> {
-    const { baseSalt, senderAddress, contractType, treasuryAddress } = options;
+    const { senderAddress, treasuryAddress } = options;
     
     const deployments = await getDeployedContractsWithSalts({
-      baseSalt,
       senderAddress,
-      contractType,
       restUrl: REST_URL,
     });
     

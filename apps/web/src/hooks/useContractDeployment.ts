@@ -1,19 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { type GranteeSignerClient } from "@burnt-labs/abstraxion";
-import { useLaunchUserMapTransaction } from "./useLaunchUserMapTransaction";
-import { useLaunchMultiRumTransaction } from "./useLaunchMultiRumTransaction";
-import { useExistingContracts } from "./useExistingContracts";
-import { formatEnvText } from "@burnt-labs/quick-start-utils";
-import { 
-  CONTRACT_TYPES, 
-  type ContractType 
-} from "../config/contractTypes";
-import {
-  INSTANTIATE_SALT,
-  FRONTEND_TEMPLATES,
-  type FrontendTemplate,
-} from "../config/constants";
+import { useLaunchUserMapTransaction } from "./useLaunchNFTTransaction";
 import { ContractDeploymentService } from "../services/ContractDeploymentService";
 import { ContractQueryService } from "../services/ContractQueryService";
 
@@ -29,9 +17,7 @@ export interface DeployedContract {
 }
 
 export interface DeploymentState {
-  [CONTRACT_TYPES.CW721]?: {
-    cw721Address: string;
-  };
+  cw721Address: string;
 }
 
 export interface ContractDeploymentResult {
@@ -43,11 +29,9 @@ export interface ContractDeploymentResult {
   isLoadingContracts: boolean;
   
   // Computed values
-  currentDeployment: DeploymentState[ContractType] | undefined;
+  currentDeployment: DeploymentState | undefined;
   addresses: {
-    appAddress: string;
-    treasuryAddress: string;
-    rumAddress?: string;
+    cw721: string;
   } | null;
   textboxValue: string;
   isPending: boolean;
@@ -60,8 +44,6 @@ export interface ContractDeploymentResult {
 }
 
 export function useContractDeployment(
-  contractType: ContractType,
-  frontendTemplate: FrontendTemplate,
   account?: { bech32Address: string }
 ): ContractDeploymentResult {
   const queryClient = useQueryClient();
@@ -70,9 +52,7 @@ export function useContractDeployment(
   const [deployedContracts, setDeployedContracts] = useState<DeploymentState>({});
   const [previousDeployments, setPreviousDeployments] = useState<DeployedContract[]>([]);
   const [isLoadingContracts, setIsLoadingContracts] = useState(false);
-  
-  const { data: existingAddresses, refetch: refetchExistingContracts } = useExistingContracts(account?.bech32Address || "");
-  
+
   // Initialize services
   const deploymentService = useMemo(() => new ContractDeploymentService(queryClient), [queryClient]);
   const queryService = useMemo(() => new ContractQueryService(), []);
@@ -82,9 +62,10 @@ export function useContractDeployment(
     setTransactionHash("");
     setErrorMessage("");
     if (account?.bech32Address) {
-      refetchExistingContracts();
+      // FIXME: Need to fetch existing contracts
+      // refetchExistingContracts();
     }
-  }, [contractType, account?.bech32Address, refetchExistingContracts]);
+  }, [account?.bech32Address]);
 
   // Fetch previously deployed contracts with different salts
   useEffect(() => {
@@ -96,13 +77,9 @@ export function useContractDeployment(
 
       setIsLoadingContracts(true);
       try {
-        const deploymentsWithMetadata = await queryService.fetchDeployedContractsWithMetadata({
-          baseSalt: INSTANTIATE_SALT,
-          senderAddress: account.bech32Address,
-          contractType: "rum",
-        });
-        
-        setPreviousDeployments(deploymentsWithMetadata);
+        // FIXME: Need to fetch existing deployments
+        // const deploymentsWithMetadata = 
+        // setPreviousDeployments(deploymentsWithMetadata);
       } catch (error) {
         console.error("Error fetching previous deployments:", error);
       } finally {
@@ -111,7 +88,7 @@ export function useContractDeployment(
     }
 
     fetchPreviousDeployments();
-  }, [account?.bech32Address, contractType, queryService]);
+  }, [account?.bech32Address, queryService]);
 
   // Check for existing contracts on startup
   useEffect(() => {
@@ -127,7 +104,6 @@ export function useContractDeployment(
         
         if (existingAddresses.rumAddress) {
           // Preserve the existing treasury address if we already have one from deployment
-          const existingRumDeployment = prev[CONTRACT_TYPES.CW721];
           updates[CONTRACT_TYPES.CW721] = {
             cw721Address: existingAddresses.rumAddress,
           };
@@ -146,41 +122,26 @@ export function useContractDeployment(
   }, [existingAddresses]);
 
   // Get current contract type's deployed addresses
-  const currentDeployment = contractType === CONTRACT_TYPES.USER_MAP 
-    ? deployedContracts[CONTRACT_TYPES.USER_MAP]
-    : deployedContracts[CONTRACT_TYPES.RUM];
+  const currentDeployment = deployedContracts;
   
   // Format addresses for display
   const addresses = useMemo(() => {
     if (!currentDeployment) return null;
     
     return {
-      appAddress: contractType === CONTRACT_TYPES.USER_MAP 
-        ? (currentDeployment as { appAddress: string }).appAddress 
-        : "",
-      treasuryAddress: currentDeployment.treasuryAddress,
-      rumAddress: contractType === CONTRACT_TYPES.RUM 
-        ? (currentDeployment as { rumAddress: string }).rumAddress 
-        : undefined,
+      cw721Address: currentDeployment.cw721Address,
     };
-  }, [currentDeployment, contractType]);
+  }, [currentDeployment]);
 
-  // Generate textbox value
-  const textboxValue = useMemo(() => {
-    if (!addresses) return "";
-    const template = contractType === CONTRACT_TYPES.RUM ? FRONTEND_TEMPLATES.RUM : frontendTemplate;
-    return formatEnvText(addresses, template, RPC_URL, REST_URL);
-  }, [addresses, frontendTemplate, contractType]);
-
-  // UserMap deployment
+  // NFT Contract deployment
   const {
     mutateAsync: launchUserMapTransaction,
     isPending: isUserMapPending,
     isSuccess: isUserMapSuccess,
   } = useLaunchUserMapTransaction({
     onSuccess: async (data) => {
-      const result = deploymentService.processUserMapDeployment(data);
-      const stateData = deploymentService.formatDeploymentForState(CONTRACT_TYPES.USER_MAP, result);
+      const result = deploymentService.processNFTDeployment(data);
+      const stateData = deploymentService.formatDeploymentForState(result);
       
       if (stateData && 'appAddress' in stateData) {
         setDeployedContracts(prev => ({
@@ -197,61 +158,11 @@ export function useContractDeployment(
     },
   });
 
-  // Multi-RUM deployment
-  const {
-    mutateAsync: launchMultiRumTransaction,
-    isPending: isMultiRumPending,
-    isSuccess: isMultiRumSuccess,
-  } = useLaunchMultiRumTransaction({
-    onSuccess: async (data) => {
-      const result = deploymentService.processMultiRumDeployment(data);
-      
-      if (result.rumDeployments && result.rumDeployments.length > 0) {
-        const stateData = deploymentService.formatDeploymentForState(CONTRACT_TYPES.RUM, result);
-        
-        if (stateData && 'rumAddress' in stateData) {
-          setDeployedContracts(prev => ({
-            ...prev,
-            [CONTRACT_TYPES.RUM]: stateData as { rumAddress: string; treasuryAddress: string },
-          }));
-        }
-        
-        await deploymentService.invalidateContractQueries(account?.bech32Address);
-        deploymentService.logDeploymentInfo(result.rumDeployments);
-        
-        setTransactionHash(result.transactionHash);
-        
-        // Reset transaction hash after 5 seconds to allow new deployments
-        setTimeout(() => {
-          setTransactionHash("");
-        }, 5000);
-      }
-      
-      // Refresh previous deployments list
-      if (account?.bech32Address) {
-        try {
-          const deploymentsWithMetadata = await queryService.fetchDeployedContractsWithMetadata({
-            baseSalt: INSTANTIATE_SALT,
-            senderAddress: account.bech32Address,
-            contractType: "rum",
-            treasuryAddress: data.treasuryAddress,
-          });
-          setPreviousDeployments(deploymentsWithMetadata);
-        } catch (error) {
-          console.error("Error refreshing deployments:", error);
-        }
-      }
-    },
-    onError: (error) => {
-      setErrorMessage(error.message);
-    },
-  });
-
   const isPending = contractType === CONTRACT_TYPES.RUM ? isMultiRumPending : isUserMapPending;
   const isSuccess = contractType === CONTRACT_TYPES.RUM ? isMultiRumSuccess : isUserMapSuccess;
 
   // Action handlers
-  const deployUserMap = async ({ senderAddress, client }: { 
+  const deployNFTContract = async ({ senderAddress, client }: { 
     senderAddress: string; 
     client: GranteeSignerClient;
   }) => {
@@ -259,23 +170,6 @@ export function useContractDeployment(
       senderAddress,
       saltString: INSTANTIATE_SALT,
       client,
-    });
-  };
-
-  const deployMultiRum = async ({ senderAddress, client, rumConfigs }: { 
-    senderAddress: string; 
-    client: GranteeSignerClient;
-    rumConfigs: Array<{ claimKey: string }>;
-  }) => {
-    const configs = rumConfigs.map(config => ({
-      claimKey: config.claimKey || "followers_count",
-    }));
-    
-    await launchMultiRumTransaction({
-      senderAddress,
-      baseSalt: INSTANTIATE_SALT,
-      client,
-      rumConfigs: configs,
     });
   };
 
@@ -289,14 +183,13 @@ export function useContractDeployment(
     
     // Computed values
     currentDeployment,
-    addresses,
+    currentAddresses,
     textboxValue,
     isPending,
     isSuccess,
     
     // Actions
-    deployUserMap,
-    deployMultiRum,
+    deployNFTContract,
     clearError: () => setErrorMessage(""),
     clearTransaction: () => setTransactionHash(""),
   };
