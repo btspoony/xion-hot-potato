@@ -1,0 +1,7 @@
+packages:
+  - apps/*
+  - deps/quickstart-frontend/packages/*
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - workerd

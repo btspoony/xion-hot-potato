@@ -1,0 +1,3 @@
+[submodule "deps/quickstart-frontend"]
+	path = deps/quickstart-frontend
+	url = https://github.com/burnt-labs/quickstart-frontend.git

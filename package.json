@@ -1,0 +1,20 @@
+{
+  "name": "hot-potato",
+  "version": "0.0.1",
+  "description": "Hot Potato App",
+  "author": "Bohao Tang<tech@btang.com>",
+  "license": "MIT",
+  "keywords": [
+    "xion"
+  ],
+  "main": "index.js",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "deploy": "turbo run deploy"
+  },
+  "packageManager": "pnpm@10.5.2",
+  "devDependencies": {
+    "turbo": "^2.5.1"
+  }
+}

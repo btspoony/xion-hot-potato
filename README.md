@@ -1,6 +1,22 @@
 # "Hot Potato" App
 
-TBD
+## How to run
+
+Clone the repo
+
+```bash
+git clone --recurse-submodules https://github.com/btspoony/xion-hot-potato.git
+
+# If you already have the repo, you can just do:
+git submodule update --init --recursive
+```
+
+Install dependencies and build the app:
+
+```bash
+pnpm install
+pnpm build
+```
 
 ## Appendix
 
