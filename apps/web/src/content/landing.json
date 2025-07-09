@@ -1,0 +1,12 @@
+{
+  "title": "NFT \"Hot Potato\" Quick Start",
+  "tagline": "Create your first NFT Contract on XION in less than 3 minutes",
+  "action_cards": [
+    {
+      "title": "Get Started",
+      "description": "Deploy a ready-made NFT Contract",
+      "link_text": "Log In",
+      "link": "https://xion.burnt.com/login"
+    }
+  ]
+}
