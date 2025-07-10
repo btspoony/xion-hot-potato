@@ -16,3 +16,6 @@ export const {
 
 export const NFT_SALT = "hot-potato-nft";
 export const NFT_INSTANTIATE_CHECKSUM = "fa0e3423e94c6d1c4a8cfc7462e6596eff651718a51b3d233896fcb09ed70ef6";
+
+export const NFT_TOKEN_URI = "https://static.fixes.world/tbh/hotpotato.json";
+export const PRE_DEPLOYED_NFT_CONTRACT_ADDRESS = "xion1t5m26dxanhzycrjf2783sz8hewadrf6jcwld7656rya4sq6z4spqew9maj";

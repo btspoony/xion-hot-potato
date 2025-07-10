@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { predictInstantiate2Address, verifyContractExists } from "@burnt-labs/quick-start-utils";
-import { NFT_INSTANTIATE_CHECKSUM, NFT_SALT } from "../config/constants";
+import { NFT_INSTANTIATE_CHECKSUM, NFT_SALT, PRE_DEPLOYED_NFT_CONTRACT_ADDRESS } from "../config/constants";
+import { queryPotatoNFTOwner } from "../lib/nft";
 
 export const EXISTING_CONTRACTS_QUERY_KEY = "existing-contracts";
 
@@ -34,3 +35,18 @@ export const useExistingContracts = (address: string) => {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 };
+
+export function usePotatoNFTOwner(userAddress: string | undefined) {
+  return useQuery({
+    queryKey: ["potato-nft-owner", userAddress],
+    queryFn: async () => {
+      const result = await queryPotatoNFTOwner(PRE_DEPLOYED_NFT_CONTRACT_ADDRESS);
+      return {
+        ...result,
+        isOwner: !!userAddress && result.minted && result.owner === userAddress,
+      };
+    },
+    enabled: !!userAddress,
+    refetchOnWindowFocus: false,
+  });
+}

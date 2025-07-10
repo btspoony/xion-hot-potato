@@ -46,7 +46,6 @@ export function useContractDeployment(
   const [deployedContract, setDeployedContract] = useState<DeploymentState>({});
 
   const { data: existingAddresses, refetch: refetchExistingContracts } = useExistingContracts(account?.bech32Address || "");
-  
 
   // Initialize services
   const deploymentService = useMemo(() => new ContractDeploymentService(queryClient), [queryClient]);

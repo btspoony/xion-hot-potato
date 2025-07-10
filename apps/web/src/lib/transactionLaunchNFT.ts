@@ -3,7 +3,6 @@ import {
   generateInstantiateNFTContractMessage,
   predictContractAddress,
 } from "./nft";
-import { GranteeSignerClient } from "@burnt-labs/abstraxion";
 
 export async function assembleInstantiateNFTTransaction({
   senderAddress,
@@ -29,20 +28,4 @@ export async function assembleInstantiateNFTTransaction({
   messages.push(nftInstantiateMessage);
 
   return { messages, contractAddress };
-}
-
-export async function executeBatchTransaction({
-  client,
-  messages,
-  senderAddress,
-}: {
-  client: GranteeSignerClient;
-  messages: EncodeObject[];
-  senderAddress: string;
-}) {
-  if (!client) {
-    throw new Error("Client is not connected");
-  }
-  const tx = await client.signAndBroadcast(senderAddress, messages, "auto");
-  return tx;
 }

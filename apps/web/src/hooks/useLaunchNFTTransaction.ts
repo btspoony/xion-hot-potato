@@ -3,8 +3,8 @@ import { GranteeSignerClient } from "@burnt-labs/abstraxion";
 import { DeliverTxResponse } from "@cosmjs/stargate";
 import {
   assembleInstantiateNFTTransaction,
-  executeBatchTransaction,
 } from "../lib/transactionLaunchNFT";
+import { executeBatchTransaction } from "../lib/txBase";
 
 interface LaunchNFTTransactionParams {
   senderAddress: string;
