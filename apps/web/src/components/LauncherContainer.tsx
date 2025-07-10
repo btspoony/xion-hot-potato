@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   useAbstraxionAccount,
   useAbstraxionSigningClient,
@@ -12,6 +13,14 @@ export default function LauncherContainer() {
   const { client } = useAbstraxionSigningClient();
   
   const deployment = useContractDeployment(account);
+
+  // Transfer NFT global status
+  const [transferSuccess, setTransferSuccess] = useState(false);
+  const [transferError, setTransferError] = useState<string>("");
+  const [transferTxHash, setTransferTxHash] = useState<string>("");
+
+  const contractAddress = deployment.currentDeployment?.cw721Address;
+  const userAddress = account?.bech32Address;
 
   // Mint Potato NFT mutation
   const mintMutation = useMintPotatoNFTTransaction();
@@ -29,10 +38,10 @@ export default function LauncherContainer() {
   };
 
   const handleMintPotatoNFT = () => {
-    if (!client || !account?.bech32Address || !deployment.currentDeployment?.cw721Address) return;
+    if (!client || !userAddress || !contractAddress) return;
     mintMutation.mutate({
-      senderAddress: account.bech32Address,
-      contractAddress: deployment.currentDeployment.cw721Address,
+      senderAddress: userAddress,
+      contractAddress,
       client,
     });
   };
@@ -44,6 +53,21 @@ export default function LauncherContainer() {
     if (mintMutation.error) {
       mintMutation.reset();
     }
+    setTransferError("");
+    setTransferSuccess(false);
+    setTransferTxHash("");
+  };
+
+  // Callbacks for transfer NFT
+  const handleTransferSuccess = (txHash: string) => {
+    setTransferSuccess(true);
+    setTransferError("");
+    setTransferTxHash(txHash);
+  };
+  const handleTransferError = (err: Error) => {
+    setTransferSuccess(false);
+    setTransferError(err.message);
+    setTransferTxHash("");
   };
 
   return (
@@ -58,14 +82,22 @@ export default function LauncherContainer() {
       isPending={deployment.isPending}
       isSuccess={deployment.isSuccess}
       isDeployed={!!deployment.currentDeployment?.cw721Address}
-      contractAddress={deployment.currentDeployment?.cw721Address}
-      userAddress={account?.bech32Address}
+      contractAddress={contractAddress}
+      userAddress={userAddress}
       isMintPending={mintMutation.isPending}
+      
+      // Transfer NFT status
+      transferSuccess={transferSuccess}
+      transferError={transferError}
+      transferTxHash={transferTxHash}
+      onTransferStatusClose={clearErrors}
       
       // Actions
       onLaunch={handleLaunch}
       onErrorClose={clearErrors}
       onMintPotatoNFT={handleMintPotatoNFT}
+      onTransferSuccess={handleTransferSuccess}
+      onTransferError={handleTransferError}
     />
   );
 }

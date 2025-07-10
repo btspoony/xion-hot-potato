@@ -114,3 +114,35 @@ export function generateMintPotatoNFTMessage({
     value: msg,
   };
 }
+
+/**
+ * Generate a MsgExecuteContract to transfer the 1/1 potato NFT
+ */
+export function generateTransferPotatoNFTMessage({
+  senderAddress,
+  contractAddress,
+  recipient,
+  tokenId = "potato_1",
+}: {
+  senderAddress: string;
+  contractAddress: string;
+  recipient: string;
+  tokenId?: string;
+}): EncodeObject {
+  const transferMsg = {
+    transfer_nft: {
+      recipient,
+      token_id: tokenId,
+    },
+  };
+  const msg = MsgExecuteContract.fromPartial({
+    sender: senderAddress,
+    contract: contractAddress,
+    msg: toUtf8(JSON.stringify(transferMsg)),
+    funds: [],
+  });
+  return {
+    typeUrl: "/cosmwasm.wasm.v1.MsgExecuteContract",
+    value: msg,
+  };
+}

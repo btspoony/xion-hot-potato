@@ -3,14 +3,25 @@ import { ExternalLinkIcon } from "./icons/ExternalIcon";
 
 export function SuccessMessage({
   transactionHash,
+  onClose,
 }: {
   transactionHash: string;
+  onClose?: () => void;
 }) {
   const explorerUrl = `http://mintscan.io/xion-testnet/tx/${transactionHash}`;
   return (
-    <section className="flex flex-col gap-4 bg-white/5 rounded-lg p-8 mb-8">
+    <section className="flex flex-col gap-4 bg-white/5 rounded-lg p-8 mb-8 relative">
+      {onClose && (
+        <button
+          className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl font-bold"
+          onClick={onClose}
+          aria-label="Close"
+        >
+          ×
+        </button>
+      )}
       <ArticleTitle>Success!</ArticleTitle>
-      <p>You have successfully launched and funded your contract.</p>
+      <p>You have successfully completed the transaction.</p>
       <div className="flex justify-end gap-2 w-full">
         <a
           href={explorerUrl}
