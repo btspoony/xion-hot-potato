@@ -33,11 +33,18 @@ pnpm dev
 
 ## 🔧 Environment Variables
 
-Create a `.env.local` file based on `.env.example` with the following variables:
+Create a `.env` file based on `.env.example` with the following variables:
 
-```
+```env
 VITE_RPC_URL=https://rpc.xion-testnet-2.burnt.com:443
 VITE_REST_URL=https://api.xion-testnet-2.burnt.com
+```
+
+Customizable variables:
+
+```env
+VITE_TREASURY_ADDRESS="xion1mj4a2t3365q0059w6ln9kkeyyj0fjlpdt0gea0vxd79epstkq4gshxqnmp"
+VITE_NFT_CODE_ID="1382"
 ```
 
 ## 📚 Learn More
