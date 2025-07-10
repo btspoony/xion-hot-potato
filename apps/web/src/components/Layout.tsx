@@ -1,5 +1,6 @@
 import {
   Abstraxion,
+  useAbstraxionAccount,
   useAbstraxionSigningClient,
   useModal,
 } from "@burnt-labs/abstraxion";
@@ -9,6 +10,8 @@ import Footer from "./Footer";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { client, logout } = useAbstraxionSigningClient();
+  const { data: account } = useAbstraxionAccount();
+
   const [, setShowModal] = useModal();
 
   const handleLoginClick = () => {
@@ -25,8 +28,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {client ? (
         <>
           <header className="flex justify-between items-center w-full border-b border-white/20 py-5 px-8 sm:px-24 mb-4">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold">Hey!</span>
+            <div className="flex flex-col items-start justify-center">
+              <span className="text-2xl font-bold">Hey, Friend!</span>
+              <span className="text-xs text-secondary-text bg-amber-300/20 rounded-md px-1.5 py-0.5">{account?.bech32Address}</span>
             </div>
             <nav>
               <BaseButton
