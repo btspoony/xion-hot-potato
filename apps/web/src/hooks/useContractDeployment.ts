@@ -3,7 +3,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { type GranteeSignerClient } from "@burnt-labs/abstraxion";
 import { useLaunchNFTTransaction } from "./useLaunchNFTTransaction";
 import { ContractDeploymentService } from "../services/ContractDeploymentService";
-import { ContractQueryService } from "../services/ContractQueryService";
 import { useExistingContracts } from "./useExistingContracts";
 import { NFT_SALT } from "../config/constants";
 
@@ -23,15 +22,12 @@ export interface DeploymentState {
 
 export interface ContractDeploymentResult {
   // State
-  deployedContracts: DeploymentState;
-  previousDeployments: DeployedContract[];
+  deployedContract: DeploymentState;
   transactionHash: string;
   errorMessage: string;
-  isLoadingContracts: boolean;
   
   // Computed values
   currentDeployment: DeploymentState | undefined;
-  addresses: DeploymentState | null;
   isPending: boolean;
   isSuccess: boolean;
   
@@ -47,16 +43,14 @@ export function useContractDeployment(
   const queryClient = useQueryClient();
   const [transactionHash, setTransactionHash] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [deployedContracts, setDeployedContracts] = useState<DeploymentState>({});
-  const [previousDeployments, setPreviousDeployments] = useState<DeployedContract[]>([]);
-  const [isLoadingContracts, setIsLoadingContracts] = useState(false);
+  const [deployedContract, setDeployedContract] = useState<DeploymentState>({});
 
   const { data: existingAddresses, refetch: refetchExistingContracts } = useExistingContracts(account?.bech32Address || "");
   
 
   // Initialize services
   const deploymentService = useMemo(() => new ContractDeploymentService(queryClient), [queryClient]);
-  const queryService = useMemo(() => new ContractQueryService(), []);
+  // const queryService = useMemo(() => new ContractQueryService(), []);
 
   // Clear success/error state when contract type changes
   useEffect(() => {
@@ -67,33 +61,10 @@ export function useContractDeployment(
     }
   }, [account?.bech32Address]);
 
-  // Fetch previously deployed contracts with different salts
-  useEffect(() => {
-    async function fetchPreviousDeployments() {
-      if (!account?.bech32Address) {
-        setPreviousDeployments([]);
-        return;
-      }
-
-      setIsLoadingContracts(true);
-      try {
-        // FIXME: Need to fetch existing deployments
-        // const deploymentsWithMetadata = 
-        // setPreviousDeployments(deploymentsWithMetadata);
-      } catch (error) {
-        console.error("Error fetching previous deployments:", error);
-      } finally {
-        setIsLoadingContracts(false);
-      }
-    }
-
-    fetchPreviousDeployments();
-  }, [account?.bech32Address, queryService]);
-
   // Check for existing contracts on startup
   useEffect(() => {
-    if (existingAddresses) {
-      setDeployedContracts(prev => {
+    if (existingAddresses?.contractExists) {
+      setDeployedContract(prev => {
         const updates: DeploymentState = {};
         
         if (existingAddresses.contractAddress) {
@@ -113,16 +84,7 @@ export function useContractDeployment(
   }, [existingAddresses]);
 
   // Get current contract type's deployed addresses
-  const currentDeployment = deployedContracts;
-  
-  // Format addresses for display
-  const addresses = useMemo(() => {
-    if (!currentDeployment) return null;
-    
-    return {
-      cw721Address: currentDeployment.cw721Address,
-    };
-  }, [currentDeployment]);
+  const currentDeployment = deployedContract;
 
   // NFT Contract deployment
   const {
@@ -140,7 +102,7 @@ export function useContractDeployment(
       const stateData = deploymentService.formatDeploymentForState(result);
       
       if (stateData && 'cw721Address' in stateData) {
-        setDeployedContracts(prev => ({
+        setDeployedContract(prev => ({
           ...prev,
           cw721Address: stateData.cw721Address,
         }));
@@ -171,15 +133,12 @@ export function useContractDeployment(
 
   return {
     // State
-    deployedContracts,
-    previousDeployments,
+    deployedContract,
     transactionHash,
     errorMessage,
-    isLoadingContracts,
     
     // Computed values
     currentDeployment,
-    addresses,
     isPending,
     isSuccess,
     

@@ -37,11 +37,7 @@ export default function LauncherContainer() {
       errorMessage={deployment.errorMessage}
       isPending={deployment.isPending}
       isSuccess={deployment.isSuccess}
-      isLoadingContracts={deployment.isLoadingContracts}
-      isDeployed={!!deployment.currentDeployment}
-      previousDeployments={deployment.previousDeployments}
-      addresses={deployment.addresses}
-      account={account}
+      isDeployed={!!deployment.currentDeployment?.cw721Address}
       
       // Actions
       onLaunch={handleLaunch}

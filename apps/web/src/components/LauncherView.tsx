@@ -1,7 +1,5 @@
 import { PageTitle, MutedText } from "./ui/Typography";
-import { DeployedContractsSection } from "./DeployedContractsSection";
 import { LaunchSection } from "./LaunchSection";
-import type { DeployedContract, DeploymentState } from "../hooks/useContractDeployment";
 
 interface LauncherViewProps {
   // Content
@@ -13,11 +11,7 @@ interface LauncherViewProps {
   errorMessage: string;
   isPending: boolean;
   isSuccess: boolean;
-  isLoadingContracts: boolean;
   isDeployed: boolean;
-  previousDeployments: DeployedContract[];
-  addresses: DeploymentState | null;
-  account?: { bech32Address: string };
   
   // Actions
   onLaunch: () => void;
@@ -31,17 +25,10 @@ export function LauncherView({
   errorMessage,
   isPending,
   isSuccess,
-  isLoadingContracts,
-  isDeployed,
-  previousDeployments,
-  addresses,
-  account,
+  isDeployed, 
   onLaunch,
   onErrorClose,
 }: LauncherViewProps) {
-  // TODO: remove this
-  console.log("addresses", addresses);
-  console.log("account", account);
   return (
     <div className="flex flex-col w-full max-w-screen-md mx-auto">
       <header className="mb-4">
@@ -49,13 +36,9 @@ export function LauncherView({
         <MutedText>{pageDescription}</MutedText>
       </header>
 
-      <DeployedContractsSection
-        deployedContracts={previousDeployments}
-      />
-
       <LaunchSection
         onLaunch={onLaunch}
-        isPending={isPending || isLoadingContracts}
+        isPending={isPending}
         isSuccess={isSuccess}
         transactionHash={transactionHash}
         errorMessage={errorMessage}
