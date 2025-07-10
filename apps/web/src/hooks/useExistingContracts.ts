@@ -1,16 +1,33 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchExistingContracts } from "@burnt-labs/quick-start-utils";
+import { predictInstantiate2Address, verifyContractExists } from "@burnt-labs/quick-start-utils";
+import { NFT_INSTANTIATE_CHECKSUM, NFT_SALT } from "../config/constants";
 
 export const EXISTING_CONTRACTS_QUERY_KEY = "existing-contracts";
+
+// const RPC_URL = import.meta.env.VITE_RPC_URL || "https://rpc.xion-testnet-2.burnt.com:443";
+const REST_URL = import.meta.env.VITE_REST_URL || "https://api.xion-testnet-2.burnt.com";
 
 export const useExistingContracts = (address: string) => {
   return useQuery({
     queryKey: [EXISTING_CONTRACTS_QUERY_KEY, address],
-    queryFn: () =>
-      fetchExistingContracts({
-        address,
-        baseUrl: window.location.origin,
-      }),
+    queryFn: async () => {
+      // Treasury addresses for each contract type (using unique salts)
+      const contractAddress = predictInstantiate2Address({
+        senderAddress: address,
+        checksum: NFT_INSTANTIATE_CHECKSUM,
+        salt: new TextEncoder().encode(NFT_SALT),
+      });
+
+      const contractExists = await verifyContractExists({
+        address: contractAddress,
+        restUrl: REST_URL,
+      });
+
+      return {
+        contractExists,
+        contractAddress,
+      };
+    },
     enabled: !!address,
     refetchOnWindowFocus: false,
     retry: 3,

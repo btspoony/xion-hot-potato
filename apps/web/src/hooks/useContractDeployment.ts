@@ -1,23 +1,24 @@
 import { useState, useEffect, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { type GranteeSignerClient } from "@burnt-labs/abstraxion";
-import { useLaunchUserMapTransaction } from "./useLaunchNFTTransaction";
+import { useLaunchNFTTransaction } from "./useLaunchNFTTransaction";
 import { ContractDeploymentService } from "../services/ContractDeploymentService";
 import { ContractQueryService } from "../services/ContractQueryService";
+import { useExistingContracts } from "./useExistingContracts";
+import { NFT_SALT } from "../config/constants";
 
-const RPC_URL = import.meta.env.VITE_RPC_URL || "https://rpc.xion-testnet-2.burnt.com:443";
-const REST_URL = import.meta.env.VITE_REST_URL || "https://api.xion-testnet-2.burnt.com";
+// const RPC_URL = import.meta.env.VITE_RPC_URL || "https://rpc.xion-testnet-2.burnt.com:443";
+// const REST_URL = import.meta.env.VITE_REST_URL || "https://api.xion-testnet-2.burnt.com";
 
 export interface DeployedContract {
   address: string;
   salt: string;
-  index?: number;
   creator?: string;
   minter?: string;
 }
 
 export interface DeploymentState {
-  cw721Address: string;
+  cw721Address?: string;
 }
 
 export interface ContractDeploymentResult {
@@ -30,15 +31,12 @@ export interface ContractDeploymentResult {
   
   // Computed values
   currentDeployment: DeploymentState | undefined;
-  addresses: {
-    cw721: string;
-  } | null;
-  textboxValue: string;
+  addresses: DeploymentState | null;
   isPending: boolean;
   isSuccess: boolean;
   
   // Actions
-  deployCW721: (params: { senderAddress: string; client: GranteeSignerClient }) => Promise<void>;
+  deployNFTContract: (params: { senderAddress: string; client: GranteeSignerClient }) => Promise<void>;
   clearError: () => void;
   clearTransaction: () => void;
 }
@@ -53,6 +51,9 @@ export function useContractDeployment(
   const [previousDeployments, setPreviousDeployments] = useState<DeployedContract[]>([]);
   const [isLoadingContracts, setIsLoadingContracts] = useState(false);
 
+  const { data: existingAddresses, refetch: refetchExistingContracts } = useExistingContracts(account?.bech32Address || "");
+  
+
   // Initialize services
   const deploymentService = useMemo(() => new ContractDeploymentService(queryClient), [queryClient]);
   const queryService = useMemo(() => new ContractQueryService(), []);
@@ -62,8 +63,7 @@ export function useContractDeployment(
     setTransactionHash("");
     setErrorMessage("");
     if (account?.bech32Address) {
-      // FIXME: Need to fetch existing contracts
-      // refetchExistingContracts();
+      refetchExistingContracts();
     }
   }, [account?.bech32Address]);
 
@@ -96,17 +96,8 @@ export function useContractDeployment(
       setDeployedContracts(prev => {
         const updates: DeploymentState = {};
         
-        if (existingAddresses.appAddress) {
-          updates[CONTRACT_TYPES.CW721] = {
-            cw721Address: existingAddresses.appAddress,
-          };
-        }
-        
-        if (existingAddresses.rumAddress) {
-          // Preserve the existing treasury address if we already have one from deployment
-          updates[CONTRACT_TYPES.CW721] = {
-            cw721Address: existingAddresses.rumAddress,
-          };
+        if (existingAddresses.contractAddress) {
+          updates.cw721Address = existingAddresses.contractAddress;
         }
         
         if (Object.keys(updates).length > 0) {
@@ -135,18 +126,23 @@ export function useContractDeployment(
 
   // NFT Contract deployment
   const {
-    mutateAsync: launchUserMapTransaction,
-    isPending: isUserMapPending,
-    isSuccess: isUserMapSuccess,
-  } = useLaunchUserMapTransaction({
+    mutateAsync: launchNFTTransaction,
+    isPending: isDeployPending,
+    isSuccess: isDeploySuccess,
+  } = useLaunchNFTTransaction({
     onSuccess: async (data) => {
-      const result = deploymentService.processNFTDeployment(data);
+      const result = deploymentService.processNFTDeployment({
+        nftAddress: data.contractAddress,
+        tx: {
+          transactionHash: data.tx.transactionHash,
+        },
+      });
       const stateData = deploymentService.formatDeploymentForState(result);
       
-      if (stateData && 'appAddress' in stateData) {
+      if (stateData && 'cw721Address' in stateData) {
         setDeployedContracts(prev => ({
           ...prev,
-          [CONTRACT_TYPES.USER_MAP]: stateData as { appAddress: string; treasuryAddress: string },
+          cw721Address: stateData.cw721Address,
         }));
       }
       
@@ -158,17 +154,17 @@ export function useContractDeployment(
     },
   });
 
-  const isPending = contractType === CONTRACT_TYPES.RUM ? isMultiRumPending : isUserMapPending;
-  const isSuccess = contractType === CONTRACT_TYPES.RUM ? isMultiRumSuccess : isUserMapSuccess;
+  const isPending = isDeployPending;
+  const isSuccess = isDeploySuccess;
 
   // Action handlers
   const deployNFTContract = async ({ senderAddress, client }: { 
     senderAddress: string; 
     client: GranteeSignerClient;
   }) => {
-    await launchUserMapTransaction({
+    await launchNFTTransaction({
       senderAddress,
-      saltString: INSTANTIATE_SALT,
+      saltString: NFT_SALT,
       client,
     });
   };
@@ -183,8 +179,7 @@ export function useContractDeployment(
     
     // Computed values
     currentDeployment,
-    currentAddresses,
-    textboxValue,
+    addresses,
     isPending,
     isSuccess,
     

@@ -1,45 +1,42 @@
-import { getDeployedContractsWithSalts, extractIndexFromSalt } from "../utils/saltGeneration";
-import { checkSharedRumTreasury } from "../lib/sharedTreasury";
+import { predictInstantiate2Address } from "@burnt-labs/quick-start-utils";
 import type { DeployedContract } from "../hooks/useContractDeployment";
+import { NFT_INSTANTIATE_CHECKSUM, NFT_SALT } from "../config/constants";
 
 const REST_URL = import.meta.env.VITE_REST_URL || "https://api.xion-testnet-2.burnt.com";
 
 export interface ContractQueryOptions {
   senderAddress: string;
-  treasuryAddress?: string;
 }
 
 export class ContractQueryService {
   /**
    * Fetch previously deployed contracts with metadata
    */
-  async fetchDeployedContractsWithMetadata(
+  async fetchDeployedContracts(
     options: ContractQueryOptions
   ): Promise<DeployedContract[]> {
-    const { senderAddress, treasuryAddress } = options;
+    const { senderAddress } = options;
     
-    const deployments = await getDeployedContractsWithSalts({
-      senderAddress,
-      restUrl: REST_URL,
+    // Treasury addresses for each contract type (using unique salts)
+    const contractAddress = predictInstantiate2Address({
+      senderAddress: senderAddress,
+      checksum: NFT_INSTANTIATE_CHECKSUM,
+      salt: new TextEncoder().encode(NFT_SALT),
     });
-    
-    // Check for shared treasury
-    const sharedTreasury = await checkSharedRumTreasury(
-      senderAddress,
-      REST_URL
-    );
-    
-    // Add metadata to deployments
-    return deployments.map(d => {
-      const saltIndex = extractIndexFromSalt(d.salt, baseSalt);
-      return {
-        ...d,
-        claimKey: undefined, // Cannot query claim key from existing contracts
-        index: saltIndex >= 0 ? saltIndex : undefined,
-        treasuryAddress: treasuryAddress || (sharedTreasury.exists ? sharedTreasury.address : undefined),
-        isSharedTreasury: sharedTreasury.exists && (!treasuryAddress || sharedTreasury.address === treasuryAddress),
-      };
-    });
+
+    const contractExists = await this.checkContractExists(contractAddress);
+
+    const deployments: DeployedContract[] = [];
+    if (contractExists) {
+      deployments.push({
+        address: contractAddress,
+        salt: NFT_SALT,
+        creator: senderAddress,
+        minter: senderAddress,
+      });
+    }
+
+    return deployments;
   }
 
   /**
