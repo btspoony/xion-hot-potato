@@ -7,7 +7,7 @@
 - Mint NFT - if the configured treasury with permission granted
 - Transfer NFT - if the NFT is owned by the user
 
-## How to run
+## Get started
 
 Clone the repo
 
@@ -16,19 +16,6 @@ git clone --recurse-submodules https://github.com/btspoony/xion-hot-potato.git
 
 # If you already have the repo, you can just do:
 git submodule update --init --recursive
-```
-
-Install dependencies and build the app:
-
-```bash
-pnpm install
-pnpm build
-```
-
-Run the app:
-
-```bash
-pnpm dev
 ```
 
 Learn more at [apps/web/README.md](apps/web/README.md)
